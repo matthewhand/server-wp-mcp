@@ -1,0 +1,11 @@
+{
+	"mcpServers": {
+		"wordpress": {
+			"command": "node",
+			"args": ["C:/Users/user/mcp-servers/server-wp-mcp-dev/dist/index.js"],
+			"env": {
+				"WP_SITES_PATH": "C:/Users/user/mcp-servers/wp-sites.json"
+			}
+		}
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "server-wp-mcp",
+	"version": "1.0.0",
+	"main": "dist/index.js",
+	"type": "module",
+	"scripts": {
+		"start": "node dist/index.js"
+	},
+	"keywords": ["modelcontextprotocol", "mcp", "server", "ai", "claude", "wordpress", "wp"],
+	"author": "mzimmer",
+	"license": "MIT",
+	"description": "The WordPress MCP server enables AI assistants to interact with WordPress sites through a standardized interface. It handles authentication and provides a secure way to discover and interact with WordPress REST API endpoints.",
+	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.0.4",
+		"axios": "^1.7.9"
+	}
+}
