@@ -115,7 +115,7 @@ Add to your `claude_desktop_config.json`:
 	"mcpServers": {
 		"wordpress": {
 			"command": "node",
-			"args": ["path/to/server/index.js"],
+			"args": ["path/to/server/dist/index.js"],
 			"env": {
 				"WP_SITES_PATH": "/absolute/path/to/wp-sites.json"
 			}
