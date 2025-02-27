@@ -2,6 +2,9 @@
 	"name": "server-wp-mcp",
 	"version": "1.0.0",
 	"main": "dist/index.js",
+	"bin": {
+		"server-wp-mcp": "dist/index.js"
+	},
 	"type": "module",
 	"scripts": {
 		"start": "node dist/index.js"
