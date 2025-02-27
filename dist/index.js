@@ -52,13 +52,16 @@ class WordPressClient {
 			}
 		};
 
-        // Add HTTPS agent to ignore TLS errors if enabled
-        if (allowInsecureTls) {
-            config.httpsAgent = new https.Agent({
-                rejectUnauthorized: false // Equivalent to curl -k
-            });
-            console.warn(`Warning: Allowing insecure TLS connections for ${site.url}`);
-        }        
+		// Define allowInsecureTls to check the environment variable
+	        const allowInsecureTls = process.env.WP_ALLOW_INSECURE_TLS === 'true';
+		
+        	// Add HTTPS agent to ignore TLS errors if enabled
+        	if (allowInsecureTls) {
+	            	config.httpsAgent = new https.Agent({
+	                	rejectUnauthorized: false // Equivalent to curl -k
+            		});
+            		console.warn(`Warning: Allowing insecure TLS connections for ${site.url}`);
+        	}        
 
 		if (site.auth) {
 			const credentials = `${site.username}:${site.auth.replace(/\s+/g, '')}`;
