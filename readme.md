@@ -1,5 +1,9 @@
-# WordPress MCP Server
+# WordPress MCP Server (Fork)
 [![smithery badge](https://smithery.ai/badge/server-wp-mcp)](https://smithery.ai/server/server-wp-mcp)
+
+**Fork Features:**
+- **TLS Security Controls**: `WP_ALLOW_INSECURE_TLS` environment variable to bypass certificate validation (use with caution)
+- **Direct GitHub Execution**: Added `bin` field in package.json for remote execution via `npx github:matthewhand/server-wp-mcp`
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that enables AI assistants to interact with WordPress sites through the WordPress REST API. Supports multiple WordPress sites with secure authentication, enabling content management, post operations, and site configuration through natural language.
 
@@ -17,11 +21,13 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that e
 
 ### Installing via Smithery
 
-To install WordPress Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/server-wp-mcp):
+To install WordPress Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/server-wp-mcp) (original version only):
 
 ```bash
 npx -y @smithery/cli install server-wp-mcp --client claude
 ```
+
+**Note:** Fork features (TLS controls, GitHub execution) are only available when installed directly from this repository.
 
 ### Manual Installation
 ```bash
