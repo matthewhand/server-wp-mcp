@@ -6,11 +6,47 @@ import axios from 'axios';
 import fs from 'fs/promises';
 import https from 'https'; // Import Node.js https module for TLS config
 
-// Load site config from config file
-async function loadSiteConfig() {
+// Load site config from config file or environment variables
+export async function loadSiteConfig() {
+    // Handle semicolon-delimited values with escape support
+    const parseEnvArray = (envVar) => {
+        if (!envVar) return [];
+        // Replace escaped semicolons with Unicode placeholder
+        return envVar.replace(/\\;/g, '\uE000')
+                     .split(';')
+                     .map(s => s.replace(/\uE000/g, ';').trim())
+                     .filter(Boolean);
+    };
+
+    const names = parseEnvArray(process.env.WP_NAME);
+    const urls = parseEnvArray(process.env.WP_URL_OVERRIDE);
+    const users = parseEnvArray(process.env.WP_USER_OVERRIDE);
+    const passes = parseEnvArray(process.env.WP_PASS_OVERRIDE);
+    
+    if (names.length + urls.length + users.length + passes.length > 0) {
+        if (names.length !== urls.length || urls.length !== users.length || users.length !== passes.length) {
+            throw new Error(`All environment variables must have matching number of values. Found:
+- Sites: ${names.length}
+- URLs: ${urls.length}
+- Users: ${users.length}
+- Passwords: ${passes.length}`);
+        }
+
+        console.log(`Using ${names.length} site configurations from environment variables`);
+        return Object.fromEntries(names.map((name, i) => [
+            name.toLowerCase().trim(),
+            {
+                url: urls[i].replace(/\/$/, '').trim(),
+                username: users[i].trim(),
+                auth: passes[i].trim()
+            }
+        ]));
+    }
+
+    // Fall back to file-based configuration
     const configPath = process.env.WP_SITES_PATH;
     if (!configPath) {
-        throw new Error("WP_SITES_PATH environment variable is required");
+        throw new Error("WP_SITES_PATH environment variable is required when not using environment overrides");
     }
 
     try {
@@ -171,4 +207,7 @@ async function main() {
     }
 }
 
-main();
+// Only run main if not in test environment and when executed directly
+if (process.env.NODE_ENV !== 'test' && require.main === module) {
+    main();
+}

@@ -4,6 +4,12 @@
 **Fork Features:**
 - **TLS Security Controls**: `WP_ALLOW_INSECURE_TLS` environment variable to bypass certificate validation (use with caution)
 - **Direct GitHub Execution**: Added `bin` field in package.json for remote execution via `npx github:matthewhand/server-wp-mcp`
+- **Environment Variable Configuration**: Support semicolon-delimited values with escape support (use `\;` for literal semicolons):
+  - `WP_NAME` (site aliases)
+  - `WP_URL_OVERRIDE` (site URLs)
+  - `WP_USER_OVERRIDE` (usernames)
+  - `WP_PASS_OVERRIDE` (application passwords)
+- **Unit Testing**: Comprehensive test suite covering configuration parsing and error handling
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server that enables AI assistants to interact with WordPress sites through the WordPress REST API. Supports multiple WordPress sites with secure authentication, enabling content management, post operations, and site configuration through natural language.
 
@@ -238,7 +244,14 @@ All errors are returned with descriptive messages to help diagnose issues.
 ## Security Considerations
 
 - Keep your `wp-sites.json` file secure and never commit it to version control
-- Consider using environment variables for sensitive data in production
+- **Environment Variable Configuration**:
+  - Use semicolons `;` to separate multiple site configurations
+  - Escape literal semicolons in values with backslash (e.g., `passw\;ord`)
+  - All environment variables must have matching entry counts:
+    - `WP_NAME` (site aliases)
+    - `WP_URL_OVERRIDE` (site URLs)
+    - `WP_USER_OVERRIDE` (usernames)
+    - `WP_PASS_OVERRIDE` (application passwords)
 - Store the config file outside of public directories
 - Use HTTPS for all WordPress sites
 - Regularly rotate application passwords
@@ -247,6 +260,19 @@ All errors are returned with descriptive messages to help diagnose issues.
 ## Dependencies
 - @modelcontextprotocol/sdk - MCP protocol implementation
 - axios - HTTP client for API requests
+
+## Testing
+
+To run the unit tests:
+
+```bash
+npm test
+```
+
+The test suite includes:
+- Environment variable parsing with escaped semicolons
+- Validation of environment variable counts
+- Configuration loading precedence (environment variables vs file)
 
 ## License
 MIT

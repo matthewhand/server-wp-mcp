@@ -7,14 +7,38 @@
 	},
 	"type": "module",
 	"scripts": {
-		"start": "node dist/index.js"
+		"start": "node dist/index.js",
+		"test": "jest"
 	},
-	"keywords": ["modelcontextprotocol", "mcp", "server", "ai", "claude", "wordpress", "wp"],
+	"keywords": [
+		"modelcontextprotocol",
+		"mcp",
+		"server",
+		"ai",
+		"claude",
+		"wordpress",
+		"wp"
+	],
 	"author": "mzimmer",
 	"license": "MIT",
 	"description": "The WordPress MCP server enables AI assistants to interact with WordPress sites through a standardized interface. It handles authentication and provides a secure way to discover and interact with WordPress REST API endpoints.",
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.0.4",
 		"axios": "^1.7.9"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.27.4",
+		"@babel/preset-env": "^7.27.2",
+		"babel-jest": "^29.7.0",
+		"jest": "^29.7.0"
+	},
+	"jest": {
+		"transform": {
+			"^.+\\.[t|j]sx?$": "babel-jest"
+		},
+		"testEnvironment": "node",
+		"transformIgnorePatterns": [
+			"<rootDir>/node_modules/(?!@modelcontextprotocol)"
+		]
 	}
 }
