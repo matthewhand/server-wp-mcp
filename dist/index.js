@@ -208,6 +208,6 @@ async function main() {
 }
 
 // Only run main if not in test environment and when executed directly
-if (process.env.NODE_ENV !== 'test' && require.main === module) {
+if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
     main();
 }
