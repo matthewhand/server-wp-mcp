@@ -140,6 +140,13 @@ async function main() {
         });
         server.setRequestHandler(ListToolsRequestSchema, async () => ({
             tools: [{
+                    name: "wp_list_sites",
+                    description: "Lists all configured WordPress sites by their aliases.",
+                    inputSchema: {
+                        type: "object",
+                        properties: {}
+                    }
+                }, {
                     name: "wp_discover_endpoints",
                     description: "The discovery operation maps all available REST API endpoints on a WordPress site and returns their methods and namespaces. This allows you to understand what operations are possible on a target WordPress site without having to manually specify endpoints, which is important because different WordPress websites can have many different and varying endpoints.",
                     inputSchema: {
@@ -186,6 +193,10 @@ async function main() {
                         throw new McpError(ErrorCode.InvalidParams, `Unknown site: ${args.site}`);
                     const result = await client.makeRequest(args.endpoint, args.method, args.params);
                     return { content: [{ type: "text", text: JSON.stringify(result, null, 2) }] };
+                }
+                case "wp_list_sites": {
+                    const siteNames = Array.from(clients.keys());
+                    return { content: [{ type: "text", text: JSON.stringify(siteNames, null, 2) }] };
                 }
                 default:
                     throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
