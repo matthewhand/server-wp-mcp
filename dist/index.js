@@ -198,6 +198,4 @@ if (debugMode) {
     process.env.DEBUG = '*';
     process.env.NODE_DEBUG = 'mcp*';
 }
-if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
-    main();
-}
+main();
