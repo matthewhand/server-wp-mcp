@@ -70,6 +70,7 @@ export async function loadSiteConfig() {
 }
 // WordPress client class
 class WordPressClient {
+    client;
     constructor(site) {
         const allowInsecureTls = process.env.WP_ALLOW_INSECURE_TLS === 'true'; // Check env var
         const config = {
@@ -88,7 +89,9 @@ class WordPressClient {
         }
         if (site.auth) {
             const credentials = `${site.username}:${site.auth.replace(/\s+/g, '')}`;
-            config.headers['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+            if (config.headers) {
+                config.headers['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+            }
         }
         this.client = axios.create(config);
     }
@@ -162,9 +165,12 @@ async function main() {
                 }]
         }));
         server.setRequestHandler(CallToolRequestSchema, async (request) => {
-            const { name, arguments: args } = request.params;
+            const { name, arguments: args = {} } = request.params;
             switch (name) {
                 case "wp_discover_endpoints": {
+                    if (typeof args.site !== 'string') {
+                        throw new McpError(ErrorCode.InvalidParams, "Missing or invalid 'site' argument for wp_discover_endpoints");
+                    }
                     const client = clients.get(args.site.toLowerCase());
                     if (!client)
                         throw new McpError(ErrorCode.InvalidParams, `Unknown site: ${args.site}`);
@@ -172,6 +178,9 @@ async function main() {
                     return { content: [{ type: "text", text: JSON.stringify(endpoints, null, 2) }] };
                 }
                 case "wp_call_endpoint": {
+                    if (typeof args.site !== 'string' || typeof args.endpoint !== 'string') {
+                        throw new McpError(ErrorCode.InvalidParams, "Missing or invalid 'site' or 'endpoint' argument for wp_call_endpoint");
+                    }
                     const client = clients.get(args.site.toLowerCase());
                     if (!client)
                         throw new McpError(ErrorCode.InvalidParams, `Unknown site: ${args.site}`);

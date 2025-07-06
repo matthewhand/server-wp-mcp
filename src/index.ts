@@ -5,9 +5,33 @@ import { ErrorCode, McpError, ListToolsRequestSchema, CallToolRequestSchema } fr
 import axios from 'axios';
 import fs from 'fs/promises';
 import https from 'https'; // Import Node.js https module for TLS config
+import { AxiosInstance, AxiosRequestConfig } from 'axios';
+
+interface WpDiscoverEndpointsArgs {
+    site: string;
+}
+
+interface WpCallEndpointArgs {
+    site: string;
+    endpoint: string;
+    method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+    params?: object;
+}
+
+interface SiteConfig {
+    url: string;
+    username: string;
+    auth: string;
+}
+
+interface RawSiteConfig {
+    URL: string;
+    USER: string;
+    PASS: string;
+}
 
 // Load site config from config file or environment variables
-export async function loadSiteConfig() {
+export async function loadSiteConfig(): Promise<Record<string, SiteConfig>> {
     // Handle semicolon-delimited values with escape support
     const parseEnvArray = (envVar) => {
         if (!envVar) return [];
@@ -51,9 +75,9 @@ export async function loadSiteConfig() {
 
     try {
         const configData = await fs.readFile(configPath, 'utf8');
-        const config = JSON.parse(configData);
+        const config: Record<string, RawSiteConfig> = JSON.parse(configData);
         
-        const normalizedConfig = {};
+        const normalizedConfig: Record<string, SiteConfig> = {};
         for (const [alias, site] of Object.entries(config)) {
             if (!site.URL || !site.USER || !site.PASS) {
                 console.error(`Invalid configuration for site ${alias}: missing required fields`);
@@ -68,7 +92,7 @@ export async function loadSiteConfig() {
         }
 
         return normalizedConfig;
-    } catch (error) {
+    } catch (error: any) {
         if (error.code === 'ENOENT') {
             throw new Error(`Config file not found at: ${configPath}`);
         }
@@ -78,9 +102,11 @@ export async function loadSiteConfig() {
 
 // WordPress client class
 class WordPressClient {
-    constructor(site) {
+    private client: AxiosInstance;
+
+    constructor(site: SiteConfig) {
         const allowInsecureTls = process.env.WP_ALLOW_INSECURE_TLS === 'true'; // Check env var
-        const config = {
+        const config: AxiosRequestConfig = {
             baseURL: `${site.url}/wp-json`,
             headers: {
                 'Content-Type': 'application/json',
@@ -98,7 +124,9 @@ class WordPressClient {
 
         if (site.auth) {
             const credentials = `${site.username}:${site.auth.replace(/\s+/g, '')}`;
-            config.headers['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+            if (config.headers) {
+                (config.headers as Record<string, string>)['Authorization'] = `Basic ${Buffer.from(credentials).toString('base64')}`;
+            }
         }
 
         this.client = axios.create(config);
@@ -107,23 +135,23 @@ class WordPressClient {
     async discoverEndpoints() {
         const response = await this.client.get('/');
         const routes = response.data?.routes ?? {};
-        return Object.entries(routes).map(([path, info]) => ({
+        return Object.entries(routes).map(([path, info]: [string, any]) => ({
             methods: info.methods ?? [],
             namespace: info.namespace ?? 'wp/v2',
             endpoints: [path]
         }));
     }
 
-    async makeRequest(endpoint, method = 'GET', params) {
+    async makeRequest(endpoint: string, method = 'GET', params?: any) {
         const path = endpoint.replace(/^\/wp-json/, '').replace(/^\/?/, '/');
-        const config = { method, url: path };
+        const config: AxiosRequestConfig = { method, url: path };
         if (method === 'GET' && params) config.params = params;
         else if (params) config.data = params;
         console.log(`Making request to: ${this.client.defaults.baseURL + path} with method: ${method} and params:`, params);
         try {
             const response = await this.client.request(config);
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Request failed:`, error);
             console.error(`Error message:`, error.message);
             console.error(`Response data:`, error.response?.data);
@@ -177,16 +205,22 @@ async function main() {
         }));
 
         server.setRequestHandler(CallToolRequestSchema, async (request) => {
-            const { name, arguments: args } = request.params;
+            const { name, arguments: args = {} } = request.params;
 
             switch (name) {
                 case "wp_discover_endpoints": {
+                    if (typeof args.site !== 'string') {
+                        throw new McpError(ErrorCode.InvalidParams, "Missing or invalid 'site' argument for wp_discover_endpoints");
+                    }
                     const client = clients.get(args.site.toLowerCase());
                     if (!client) throw new McpError(ErrorCode.InvalidParams, `Unknown site: ${args.site}`);
                     const endpoints = await client.discoverEndpoints();
                     return { content: [{ type: "text", text: JSON.stringify(endpoints, null, 2) }] };
                 }
                 case "wp_call_endpoint": {
+                    if (typeof args.site !== 'string' || typeof args.endpoint !== 'string') {
+                        throw new McpError(ErrorCode.InvalidParams, "Missing or invalid 'site' or 'endpoint' argument for wp_call_endpoint");
+                    }
                     const client = clients.get(args.site.toLowerCase());
                     if (!client) throw new McpError(ErrorCode.InvalidParams, `Unknown site: ${args.site}`);
                     const result = await client.makeRequest(args.endpoint, args.method, args.params);
@@ -215,6 +249,4 @@ if (debugMode) {
     process.env.NODE_DEBUG = 'mcp*';
 }
 
-if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
-    main();
-}
+main();
